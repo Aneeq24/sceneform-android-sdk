@@ -34,6 +34,7 @@ import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.Node;
+import com.google.ar.sceneform.math.Quaternion;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.Color;
 import com.google.ar.sceneform.rendering.ExternalTexture;
@@ -77,7 +78,7 @@ public class ChromaKeyVideoActivity extends AppCompatActivity {
     ExternalTexture texture = new ExternalTexture();
 
     // Create an Android MediaPlayer to capture the video on the external texture's surface.
-    mediaPlayer = MediaPlayer.create(this, R.raw.lion_chroma);
+    mediaPlayer = MediaPlayer.create(this, R.raw.green_screen);
     mediaPlayer.setSurface(texture.getSurface());
     mediaPlayer.setLooping(true);
 
@@ -124,6 +125,16 @@ public class ChromaKeyVideoActivity extends AppCompatActivity {
               new Vector3(
                   VIDEO_HEIGHT_METERS * (videoWidth / videoHeight), VIDEO_HEIGHT_METERS, 1.0f));
 
+            arFragment.getArSceneView().getScene().addOnUpdateListener(frameTime -> {
+                arFragment.onUpdate(frameTime);
+
+                Vector3 cameraPosition = arFragment.getArSceneView().getScene().getCamera().getWorldPosition();
+                Vector3 cardPosition = videoNode.getWorldPosition();
+                Vector3 direction = Vector3.subtract(cameraPosition, cardPosition);
+                Quaternion lookRotation = Quaternion.lookRotation(direction, Vector3.up());
+                videoNode.setWorldRotation(lookRotation);
+            });
+
           // Start playing the video when the first node is placed.
           if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
@@ -142,6 +153,7 @@ public class ChromaKeyVideoActivity extends AppCompatActivity {
             videoNode.setRenderable(videoRenderable);
           }
         });
+
   }
 
   @Override
